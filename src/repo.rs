@@ -2684,6 +2684,49 @@ impl Repository {
         }
     }
 
+    /// Create a new stash containing local modifications without storing it
+    /// anywhere in the ref namespace.
+    pub fn stash_create(
+        &mut self,
+        stasher: &Signature<'_>,
+        message: Option<&str>,
+        flags: Option<StashFlags>,
+    ) -> Result<Oid, Error> {
+        unsafe {
+            let mut raw_oid = raw::git_oid {
+                id: [0; raw::GIT_OID_RAWSZ],
+            };
+            let message = crate::opt_cstr(message)?;
+            let flags = flags.unwrap_or_else(StashFlags::empty);
+            try_call!(raw::git_stash_create(
+                &mut raw_oid,
+                self.raw(),
+                stasher.raw(),
+                message,
+                flags.bits() as c_uint
+            ));
+            Ok(Binding::from_raw(&raw_oid as *const _))
+        }
+    }
+
+    /// Store a stash created via git_stash_create in the stash ref, updating
+    /// the stash reflog.
+    pub fn stash_store(
+        &mut self,
+        stash_id: &Oid,
+        message: Option<&str>,
+    ) -> Result<(), Error> {
+        unsafe {
+            let message = crate::opt_cstr(message)?;
+            try_call!(raw::git_stash_store(
+                stash_id.raw(),
+                self.raw(),
+                message
+            ));
+            Ok(())
+        }
+    }
+
     /// Apply a single stashed state from the stash list.
     pub fn stash_apply(
         &mut self,

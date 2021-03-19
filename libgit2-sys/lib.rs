@@ -2368,6 +2368,20 @@ extern "C" {
         flags: c_uint,
     ) -> c_int;
 
+    pub fn git_stash_create(
+        out: *mut git_oid,
+        repo: *mut git_repository,
+        stasher: *const git_signature,
+        message: *const c_char,
+        flags: c_uint,
+    ) -> c_int;
+
+    pub fn git_stash_store(
+        stash_id: *const git_oid,
+        repo: *mut git_repository,
+        message: *const c_char,
+    ) -> c_int;
+
     pub fn git_stash_apply_init_options(
         opts: *mut git_stash_apply_options,
         version: c_uint,
